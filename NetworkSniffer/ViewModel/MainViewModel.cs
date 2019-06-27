@@ -4,6 +4,7 @@ using NetworkSniffer.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -380,14 +381,14 @@ namespace NetworkSniffer.ViewModel
                 {
                     foreach (UnicastIPAddressInformation ip in networkInterface.GetIPProperties().UnicastAddresses)
                     {
-                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
-                        {
+                        //if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                        //{
                             InterfaceList.Add(new IPNetworkInterface
                             {
                                 InterfaceAddress = ip.Address.ToString(),
                                 InterfaceName = networkInterface.Name
                             });
-                        }
+                        //}
                     }
                 }
             }
@@ -476,7 +477,7 @@ namespace NetworkSniffer.ViewModel
             foreach (string ip in srcIPList)
             {
                 SrcIPRule = false;
-                if (ip == newPacket.IPHeader[0].SourceIPAddress.ToString())
+                if (ip.ToUpper() == newPacket.IPHeader[0].SourceIPAddress.ToString().ToUpper())
                 {
                     SrcIPRule = true;
                     break;
@@ -486,7 +487,7 @@ namespace NetworkSniffer.ViewModel
             foreach (string ip in destIPList)
             {
                 DstIPRule = false;
-                if (ip == newPacket.IPHeader[0].DestinationIPAddress.ToString())
+                if (ip.ToUpper() == newPacket.IPHeader[0].DestinationIPAddress.ToString().ToUpper())
                 {
                     DstIPRule = true;
                     break;
@@ -588,6 +589,11 @@ namespace NetworkSniffer.ViewModel
                 {
                     return true;
                 }
+                else if (protocol.Equals("ICMPV6") &&
+                    newPacket.IPHeader[0].TransportProtocolName.ToUpper() == "ICMPV6")
+                {
+                    return true;
+                }
                 else if (protocol.Equals("DNS") && 
                     newPacket.UDPPacket.Count > 0 &&
                     (newPacket.UDPPacket[0].UDPHeader[0].DestinationPort == 53 ||
@@ -641,13 +647,24 @@ namespace NetworkSniffer.ViewModel
         private List<string> ValidIPAddress(List<string> IPList, string isValid)
         {
             const string PatternIP = @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$";
+            const string PatternIPv6 = @"\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$";
             const string SrcPattern = @"^SRC=" + PatternIP;
             const string DstPattern = @"^DEST=" + PatternIP;
+            const string SrcPatternV6 = @"^SRC=" + PatternIPv6;
+            const string DstPatternV6 = @"^DEST=" + PatternIPv6;
 
-            if (Regex.Match(isValid, SrcPattern).Success ||
-                Regex.Match(isValid, DstPattern).Success)
+            if (Regex.Match(isValid, SrcPattern).Success || Regex.Match(isValid, DstPattern).Success)
             {
                 string ipString = Regex.Match(isValid, PatternIP).Value;
+                IPAddress ipAddress;
+                if (IPAddress.TryParse(ipString, out ipAddress))
+                {
+                    IPList.Add(ipString);
+                }
+            }
+            else if (Regex.Match(isValid, SrcPatternV6).Success || Regex.Match(isValid, DstPatternV6).Success)
+            {
+                string ipString = Regex.Match(isValid, PatternIPv6).Value;
                 IPAddress ipAddress;
                 if (IPAddress.TryParse(ipString, out ipAddress))
                 {
@@ -836,7 +853,7 @@ namespace NetworkSniffer.ViewModel
             List<string> filterList = new List<string>(filter.ToUpper().Split(' '));
 
             // A list of allowed supported protocols
-            string[] allowedProtocols = { "UDP", "TCP", "IGMP", "ICMP", "DNS",
+            string[] allowedProtocols = { "UDP", "TCP", "IGMP", "ICMP", "ICMPV6", "DNS",
                                           "HTTPS", "HTTP", "SSH", "IRC" };
 
             // Remove all substrings that are not in list of allowed filters
