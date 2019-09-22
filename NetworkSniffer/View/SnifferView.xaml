@@ -39,7 +39,7 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </ComboBox>
-            <Button Content="Start"  HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Padding="10 0" Margin="5 0"
+            <Button Content="Start"  HorizontalAlignment="Left" VerticalAlignment="Top" Height="26" Padding="10 0" Margin="5,2,5,0"
                     Command="{Binding StartCapture}"
                     IsEnabled="{Binding IsStartEnabled}"></Button>
             <Button Content="Stop"  HorizontalAlignment="Left" VerticalAlignment="Center" Height="25" Padding="10 0" Margin="0 0 5 0"
@@ -81,7 +81,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Source IP" Width="130">
+                    <GridViewColumn Header="Source IP" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Path=IPHeader[0].SourceIPAddress}"></TextBlock>
@@ -98,7 +98,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Destination IP" Width="130">
+                    <GridViewColumn Header="Destination IP" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Path=IPHeader[0].DestinationIPAddress}"></TextBlock>
@@ -155,8 +155,8 @@
                         <TextBlock Text="; "></TextBlock>
                         <TextBlock Text="{Binding TCPPacket[0].ApplicationProtocolType.PortName}"></TextBlock>
                         <TextBlock Text="{Binding UDPPacket[0].ApplicationProtocolType.PortName}"></TextBlock>
-                    </DockPanel>                    
-                </HierarchicalDataTemplate>
+                    </DockPanel>
+                </HierarchicalDataTemplate>                
                 <HierarchicalDataTemplate DataType="{x:Type model:TCPPacket}" ItemsSource="{Binding Path=PacketContent}">
                     <TextBlock Text="TCP Packet"></TextBlock>
                 </HierarchicalDataTemplate>
@@ -173,40 +173,68 @@
                     <TextBlock Text="DNS Packet"></TextBlock>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type model:IPHeader}">
-                    <StackPanel>
+                    <StackPanel>                        
                         <DockPanel>
                             <TextBlock Text="   Version: "></TextBlock>
                             <TextBlock Text="{Binding Version}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Priority: "></TextBlock>
+                            <TextBlock Text="{Binding Priority}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Traffic Class: "></TextBlock>
+                            <TextBlock Text="{Binding TrafficClass}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Flow Label: "></TextBlock>
+                            <TextBlock Text="{Binding FlowLabel}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Payload Length: "></TextBlock>
+                            <TextBlock Text="{Binding PayloadLength}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Next Header: "></TextBlock>
+                            <TextBlock Text="{Binding NextHeaderFormat}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityHopByHop}">
+                            <TextBlock Text="          Hop by Hop - Next Header: "></TextBlock>
+                            <TextBlock Text="{Binding HopByHopHeader.NextHeaderFormat}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv6}">
+                            <TextBlock Text="   Hop Limit: "></TextBlock>
+                            <TextBlock Text="{Binding HopLimit}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   IHL: "></TextBlock>
                             <TextBlock Text="{Binding InternetHeaderLength}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   TOS: "></TextBlock>
                             <TextBlock Text="{Binding TypeOfService}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   Total length: "></TextBlock>
                             <TextBlock Text="{Binding TotalLength}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   Flags: "></TextBlock>
                             <TextBlock Text="{Binding Flags}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   Fragment Offset: "></TextBlock>
                             <TextBlock Text="{Binding FragmentOffset}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   TTL: "></TextBlock>
                             <TextBlock Text="{Binding TimeToLive}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   Transport protocol: "></TextBlock>
                             <TextBlock Text="{Binding TransportProtocolName}"></TextBlock>
                         </DockPanel>
-                        <DockPanel>
+                        <DockPanel Visibility="{Binding VisibilityIPv4}">
                             <TextBlock Text="   Header checksum: "></TextBlock>
                             <TextBlock Text="{Binding HeaderChecksum}"></TextBlock>
                         </DockPanel>
@@ -217,6 +245,22 @@
                         <DockPanel>
                             <TextBlock Text="   Destination: "></TextBlock>
                             <TextBlock Text="{Binding DestinationIPAddress}"></TextBlock>
+                        </DockPanel>
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type model:HopByHopHeader}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="   NextHeader: "></TextBlock>
+                            <TextBlock Text="{Binding NextHeaderFormat}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="   Length: "></TextBlock>
+                            <TextBlock Text="{Binding Length}"></TextBlock>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="   TotalLength: "></TextBlock>
+                            <TextBlock Text="{Binding TotalLength}"></TextBlock>
                         </DockPanel>
                     </StackPanel>
                 </DataTemplate>
